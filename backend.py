@@ -43,7 +43,7 @@ def get_users():
         userToAdd = request.get_json()
         userToAdd['id'] = uuid.uuid4()
         users['users_list'].append(userToAdd)
-        resp = jsonify(success=True),201
+        resp = jsonify(userToAdd),201
         return resp
 
 
