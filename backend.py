@@ -41,7 +41,7 @@ def get_users():
             return subdict
     elif request.method == 'POST':
         userToAdd = request.get_json()
-        userToAdd['id'] = uuid.uuid4()
+        userToAdd['id'] = uuid.uuid1().hex
         users['users_list'].append(userToAdd)
         resp = jsonify(userToAdd),201
         return resp
