@@ -1,14 +1,15 @@
 from flask import Flask, request, jsonify
+from flask_cors import CORS
 
 app = Flask(__name__)
-
+CORS(app)
 
 @app.route('/')
 def hello_world():
     return 'Hello, World!'
 
 
-@app.route('/users', methods=['GET', 'POST', 'DELETE'])
+@app.route('/users', methods=['GET', 'POST'])
 def get_users():
     if request.method == 'GET':
         search_username = request.args.get('name')
@@ -18,22 +19,25 @@ def get_users():
             findict = {'users_list': []}
             for user in users['users_list']:
                 if user['name'] == search_username:
-                    subdict['users_list'].append(user)
-            for user in subdict['users_list']:
-                if user['job'] == search_job:
                     findict['users_list'].append(user)
-            return findict
-        if search_username:
+            for user in findict['users_list']:
+                if user['job'] == search_job:
+                    subdict['users_list'].append(user)
+        elif search_username:
             for user in users['users_list']:
                 if user['name'] == search_username:
                     subdict['users_list'].append(user)
-            return subdict
-        if search_job:
+        elif search_job:
             for user in users['users_list']:
                 if user['job'] == search_job:
                     subdict['users_list'].append(user)
+        else:
+            return users
+        if subdict == {'users_list': []}:
+            resp = jsonify({"Msg": "User not found within provided search."})
+            return resp
+        else:
             return subdict
-        return users
     elif request.method == 'POST':
         userToAdd = request.get_json()
         users['users_list'].append(userToAdd)
@@ -41,26 +45,21 @@ def get_users():
         # resp.status_code = 200 #optionally, you can always set a response code.
         # 200 is the default code for a normal response
         return resp
-    elif request.method == 'DELETE':
-        search_id = request.get_json()
-        subdict = {'users_list': []}
-        for user in users['users_list']:
-            if user['id'] == search_id['id']:
-                users['users_list'].remove(user)
-                resp = jsonify(success=True)
-                return resp
-        resp = jsonify(success=False)
-        return resp
 
 
-
-@app.route('/users/<id>')
+@app.route('/users/<id>', methods=['GET', 'DELETE'])
 def get_user(id):
     if id:
         for user in users['users_list']:
             if user['id'] == id:
-                return user
-        return ({})
+                if request.method == 'GET':
+                    return user
+                elif request.method == 'DELETE':
+                    users['users_list'].remove(user)
+                    resp = jsonify(), 204
+                    return resp
+        resp = jsonify({"Msg": "User not found with provided id."}), 404
+        return resp
     return users
 
 
