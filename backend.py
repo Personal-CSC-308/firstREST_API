@@ -1,5 +1,6 @@
 from flask import Flask, request, jsonify
 from flask_cors import CORS
+import uuid
 
 app = Flask(__name__)
 CORS(app)
@@ -40,6 +41,7 @@ def get_users():
             return subdict
     elif request.method == 'POST':
         userToAdd = request.get_json()
+        userToAdd['id'] = uuid.uuid4()
         users['users_list'].append(userToAdd)
         resp = jsonify(success=True),201
         return resp
