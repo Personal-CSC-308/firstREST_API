@@ -1,8 +1,7 @@
+import model_mongodb
 from flask import Flask, request, jsonify
 from flask_cors import CORS
-import random
-import string
-import model_mongodb
+
 
 app = Flask(__name__)
 CORS(app)
@@ -18,15 +17,17 @@ def get_users():
         search_username = request.args.get('name')
         search_job = request.args.get('job')
         if search_username and search_job :
-            return User().find_by_name_job(search_username, search_job) #convert to DB access
+            users = model_mongodb.User().find_by_name_job(search_username, search_job) #convert to DB access
         elif search_username :
-            users = User().find_by_name(search_username)
+            users = model_mongodb.User().find_by_name(search_username)
+        elif search_job :
+            users = model_mongodb.User().find_by_job(search_job)
         else :
-            users = User().find_all()
+            users = model_mongodb.User().find_all()
         return {"users_list": users}
     elif request.method == 'POST':
         userToAdd = request.get_json()
-        newUser = User(userToAdd)
+        newUser = model_mongodb.User(userToAdd)
         newUser.save()
         resp = jsonify(newUser), 201
         return resp
@@ -34,32 +35,17 @@ def get_users():
 @app.route('/users/<id>', methods=['GET', 'DELETE'])
 def get_user(id):
     if request.method == 'GET':
-        user = User({"_id":id})
+        user = model_mongodb.User({"_id":id})
         if user.reload() :
             return user
         else :
             return jsonify({"error": "User not found"}), 404
     elif request.method == 'DELETE': #convert to DB access
-        user = User({"_id":id})
+        user = model_mongodb.User({"_id":id})
         if user.remove() :
             return user
         else :
             return jsonify({"error": "User not found"}), 404
-
-        # for user in users['users_list']:
-        #     if user['id'] == id:
-        #         users['users_list'].remove(user)
-        #         resp = jsonify(),204
-        #         return resp                
-        #     return jsonify({"error": "User not found"}), 404
-
-def find_users_by_name_job(name, job):
-    subdict = {'users_list' : []}
-    for user in users['users_list']:
-        if user['name'] == name and user['job'] == job:
-            subdict['users_list'].append(user)
-    return subdict  
-
 
 users = {
     'users_list':
